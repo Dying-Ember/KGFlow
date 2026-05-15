@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Plan Tasks",
+  "description": "Lead Developer's task breakdown with parallelization decisions",
+  "type": "object",
+  "required": ["schema_version", "meta", "data"],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "meta": {
+      "type": "object",
+      "properties": {
+        "impact_report_ref": {"type": "string"},
+        "kg_run_id": {"type": "string", "pattern": "^[0-9a-f]{12}$"}
+      }
+    },
+    "data": {
+      "type": "object",
+      "required": ["tasks"],
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["task_id", "files"],
+            "properties": {
+              "task_id": {"type": "string"},
+              "files": {"type": "array", "items": {"type": "string"}},
+              "methods": {"type": "array", "items": {"type": "string"}},
+              "parallel_group": {"type": "string"},
+              "assigned_to": {"type": "string"}
+            }
+          }
+        },
+        "parallel_plan": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "group_id": {"type": "string"},
+              "task_ids": {"type": "array", "items": {"type": "string"}},
+              "gate_1_result": {"type": "string", "enum": ["BLOCK", "WARN", "PASS"]},
+              "gate_2_result": {"type": "string", "enum": ["BLOCK", "WARN", "PASS"]}
+            }
+          }
+        }
+      }
+    }
+  }
+}

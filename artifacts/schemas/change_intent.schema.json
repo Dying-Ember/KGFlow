@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Change Intent",
+  "description": "Machine-readable gate criteria for PR acceptance - declares expected KG changes",
+  "type": "object",
+  "required": ["schema_version", "meta", "data"],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "meta": {
+      "type": "object",
+      "properties": {
+        "kg_run_id": {"type": "string", "pattern": "^[0-9a-f]{12}$"},
+        "plan_tasks_ref": {"type": "string"}
+      }
+    },
+    "data": {
+      "type": "object",
+      "required": ["tasks"],
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "task_id": {"type": "string"},
+              "files": {"type": "array", "items": {"type": "string"}},
+              "hard_rules": {
+                "type": "object",
+                "properties": {
+                  "forbidden_new_edges": {"type": "array", "items": {"type": "string"}},
+                  "forbidden_removed_edges": {"type": "array", "items": {"type": "string"}},
+                  "max_orphan_nodes": {"type": "integer", "default": 0}
+                }
+              },
+              "soft_rules": {
+                "type": "object",
+                "properties": {
+                  "allowed_new_edges": {"type": "array", "items": {"type": "string"}},
+                  "edge_budget_by_type": {"type": "object"},
+                  "unknown_edge_policy": {"type": "string", "enum": ["warn", "block"]}
+                }
+              }
+            },
+            "anyOf": [
+              {"required": ["task_id", "files"]}
+            ]
+          }
+        },
+        "arch_rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule", "action"],
+            "properties": {
+              "rule": {"type": "string"},
+              "action": {"type": "string", "enum": ["block", "warn", "pass"]}
+            }
+          }
+        }
+      }
+    }
+  }
+}

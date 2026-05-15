@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KG Diff",
+  "description": "Output of diff_kg.py - incremental changes between two knowledge graph runs",
+  "type": "object",
+  "required": ["schema_version", "meta", "meta_check", "change_attribution", "summary"],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "meta": {
+      "type": "object",
+      "required": ["from_run_id", "to_run_id"],
+      "properties": {
+        "from_run_id": {"type": "string", "pattern": "^[0-9a-f]{12}$"},
+        "to_run_id": {"type": "string", "pattern": "^[0-9a-f]{12}$"},
+        "generated_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "meta_check": {
+      "type": "object",
+      "required": ["generator_version_match", "extractor_config_hash_match"],
+      "properties": {
+        "generator_version_match": {"type": "boolean"},
+        "extractor_config_hash_match": {"type": "boolean"}
+      }
+    },
+    "change_attribution": {"type": "string", "enum": ["code_only", "extractor_only", "mixed", "unknown"]},
+    "summary": {
+      "type": "object",
+      "properties": {
+        "nodes_added": {"type": "integer"},
+        "nodes_removed": {"type": "integer"},
+        "edges_added": {"type": "integer"},
+        "edges_removed": {"type": "integer"}
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Impact Report",
+  "description": "Output of Impact Analyst stage - identifies blast radius of proposed changes",
+  "type": "object",
+  "required": ["schema_version", "meta", "data"],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "meta": {
+      "type": "object",
+      "required": ["kg_run_id"],
+      "properties": {
+        "kg_run_id": {"type": "string", "pattern": "^[0-9a-f]{12}$"},
+        "generated_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "data": {
+      "type": "object",
+      "required": ["affected"],
+      "properties": {
+        "affected": {
+          "type": "object",
+          "properties": {
+            "methods": {"type": "array", "items": {"type": "string"}},
+            "modules": {"type": "array", "items": {"type": "string"}},
+            "config_keys": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "subgraphs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "string"},
+              "entry_methods": {"type": "array", "items": {"type": "string"}},
+              "reachable_nodes": {"type": "array", "items": {"type": "string"}},
+              "disjoint_from": {"type": "array", "items": {"type": "string"}}
+            },
+            "required": ["id", "entry_methods"]
+          }
+        }
+      }
+    }
+  }
+}

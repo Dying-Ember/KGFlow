@@ -1,0 +1,292 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KGFlow Extractor Output",
+  "description": "Unified output contract for all language extractors. Every Extractor (Python/JS/Go/Java/TS/...) must produce this exact structure.",
+  "type": "object",
+  "required": ["schema_version", "language", "extractor_version", "data", "coverage"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Version of this schema contract (currently 1.0.0)"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["python", "javascript", "typescript", "go", "java", "rust", "csharp", "ruby", "cpp", "unknown"],
+      "description": "Source language of the parsed codebase"
+    },
+    "extractor_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Version of the extractor implementation"
+    },
+    "project_root": {
+      "type": "string",
+      "description": "Absolute path to the analyzed project root"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "modules", "classes", "methods", "functions", "imports",
+        "compositions", "signals", "call_sites", "error_handlers",
+        "raises", "conditions", "returns", "withs", "signal_emits",
+        "attr_assignments"
+      ],
+      "properties": {
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "path", "lines"],
+            "properties": {
+              "name":   {"type": "string", "description": "Dotted module path, e.g. 'engine.foo_bar'"},
+              "path":   {"type": "string", "description": "Repo-relative path, POSIX '/', e.g. 'engine/foo_bar.py'"},
+              "lines":  {"type": "integer", "description": "File line count"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "fqn", "module", "bases", "file_path", "start_line", "end_line"],
+            "properties": {
+              "name":       {"type": "string", "description": "Short class name e.g. 'MyClass'"},
+              "fqn":        {"type": "string", "description": "Fully qualified e.g. 'pkg.MyClass'"},
+              "module":     {"type": "string", "description": "Parent module FQN"},
+              "bases":      {"type": "array", "items": {"type": "string"}, "description": "Base class names"},
+              "file_path":  {"type": "string"},
+              "start_line": {"type": "integer"},
+              "end_line":   {"type": "integer"},
+              "start_col":  {"type": "integer"},
+              "end_col":    {"type": "integer"},
+              "language":   {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "fqn", "owner_class", "file_path", "start_line", "end_line"],
+            "properties": {
+              "name":        {"type": "string"},
+              "fqn":         {"type": "string", "description": "FQN e.g. 'pkg.MyClass.my_method'"},
+              "owner_class": {"type": "string", "description": "Owner class FQN"},
+              "file_path":   {"type": "string"},
+              "start_line":  {"type": "integer"},
+              "end_line":    {"type": "integer"},
+              "start_col":   {"type": "integer"},
+              "end_col":     {"type": "integer"},
+              "params":      {"type": "array", "items": {"type": "string"}},
+              "decorators":  {"type": "array", "items": {"type": "string"}},
+              "language":    {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "functions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "fqn", "module", "file_path", "start_line", "end_line"],
+            "properties": {
+              "name":       {"type": "string"},
+              "fqn":        {"type": "string"},
+              "module":     {"type": "string"},
+              "file_path":  {"type": "string"},
+              "start_line": {"type": "integer"},
+              "end_line":   {"type": "integer"},
+              "start_col":  {"type": "integer"},
+              "end_col":    {"type": "integer"},
+              "params":     {"type": "array", "items": {"type": "string"}},
+              "decorators": {"type": "array", "items": {"type": "string"}},
+              "language":   {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "imports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from_module", "to_module", "what", "line"],
+            "properties": {
+              "from_module": {"type": "string", "description": "Importing module FQN"},
+              "to_module":   {"type": "string", "description": "Imported module FQN"},
+              "what":        {"type": "string", "description": "Imported name (alias or original)"},
+              "line":        {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "compositions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["class", "composes", "attr", "line"],
+            "properties": {
+              "class":    {"type": "string", "description": "Composing class FQN"},
+              "composes": {"type": "string", "description": "Composed class short name"},
+              "attr":     {"type": "string", "description": "Attribute name on self/this"},
+              "line":     {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["class", "name", "params", "line"],
+            "properties": {
+              "class":  {"type": "string", "description": "Owning class FQN"},
+              "name":   {"type": "string", "description": "Signal attribute name"},
+              "params": {"type": "array", "items": {"type": "string"}},
+              "line":   {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "call_sites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["caller_fqn", "call_expr", "line", "confidence"],
+            "properties": {
+              "caller_fqn":      {"type": "string", "description": "Caller method/function FQN"},
+              "call_expr":       {"type": "string", "description": "Full call expression as string"},
+              "resolved_target": {"type": ["string", "null"], "description": "Resolved callee FQN or null"},
+              "is_self_call":    {"type": "boolean"},
+              "line":            {"type": "integer"},
+              "confidence":      {"type": "string", "enum": ["high", "medium", "low"]},
+              "resolution":      {"type": "string", "enum": ["exact", "heuristic", "unresolved"]},
+              "evidence":        {"type": "string", "enum": [
+                "import_match", "same_file_match", "type_inference",
+                "name_pattern", "attr_tracking", ""]}
+            },
+            "additionalProperties": false
+          }
+        },
+        "error_handlers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["owner_fqn", "exception_types"],
+            "properties": {
+              "owner_fqn":       {"type": "string", "description": "Method containing the try block"},
+              "exception_types": {"type": "array", "items": {"type": "string"}, "description": "Caught exception names"},
+              "has_finally":     {"type": "boolean"},
+              "line":            {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "raises": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["owner_fqn", "exception_name"],
+            "properties": {
+              "owner_fqn":      {"type": "string"},
+              "exception_name": {"type": "string"},
+              "line":           {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["owner_fqn", "condition", "type"],
+            "properties": {
+              "owner_fqn": {"type": "string"},
+              "condition": {"type": "string", "description": "Condition expression as string"},
+              "type":      {"type": "string", "enum": ["if", "while", "for"]},
+              "line":      {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "returns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["owner_fqn", "return_type", "is_none", "line"],
+            "properties": {
+              "owner_fqn":   {"type": "string"},
+              "return_type": {"type": "string"},
+              "is_none":     {"type": "boolean"},
+              "line":        {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "withs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["owner_fqn", "context_expr"],
+            "properties": {
+              "owner_fqn":    {"type": "string"},
+              "context_expr": {"type": "string"},
+              "line":         {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "signal_emits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["owner_fqn", "signal_name", "args_count"],
+            "properties": {
+              "owner_fqn":   {"type": "string", "description": "Method FQN emitting the signal"},
+              "signal_name": {"type": "string", "description": "Signal attribute name on self"},
+              "args_count":  {"type": "integer"},
+              "line":        {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "attr_assignments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["owner_class", "attr", "method_fqn", "line"],
+            "properties": {
+              "owner_class":   {"type": "string"},
+              "attr":          {"type": "string", "description": "Target attribute name"},
+              "assigned_type": {"type": ["string", "null"]},
+              "method_fqn":    {"type": "string"},
+              "line":          {"type": "integer"}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["files_scanned", "files_parsed_ok", "parse_errors"],
+      "properties": {
+        "files_scanned":    {"type": "integer"},
+        "files_parsed_ok":  {"type": "integer"},
+        "parse_errors":     {"type": "integer"},
+        "parse_error_files":{"type": "array", "items": {"type": "string"}},
+        "functions_found":  {"type": "integer"},
+        "calls_found":      {"type": "integer"},
+        "imports_found":    {"type": "integer"},
+        "classes_found":    {"type": "integer"},
+        "conditions_found": {"type": "integer"},
+        "error_handlers_found": {"type": "integer"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

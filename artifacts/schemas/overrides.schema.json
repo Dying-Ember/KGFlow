@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Overrides",
+  "description": "Manual override decisions that bypass gate rules - auditable exemption records",
+  "type": "object",
+  "required": ["schema_version", "data"],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "data": {
+      "type": "object",
+      "required": ["overrides"],
+      "properties": {
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["override_id", "reason", "approver", "created_at"],
+            "properties": {
+              "override_id": {"type": "string"},
+              "scope": {"type": "object"},
+              "reason": {"type": "string"},
+              "approver": {"type": "string"},
+              "created_at": {"type": "string", "format": "date-time"},
+              "approval_hash": {"type": "string"},
+              "expires_at": {"type": ["string", "null"], "format": "date-time"}
+            }
+          }
+        }
+      }
+    }
+  }
+}
