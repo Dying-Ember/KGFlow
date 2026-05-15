@@ -178,12 +178,13 @@ Phase 4 (并行)
 ```
 Phase                    Status    Items
 ─────────────────────────────────────────────────────
-P0: 核心工具链           ✅ 100%   7 tools: generate/query/diff/validate/import + parser/gen
+P0: 核心工具链           ✅ 100%   7 tools + parser + gen
 P0: Extractor 框架       ✅ 100%   base.py + registry + python_extractor (regression 0 diff)
-P1: tree-sitter 查询      ⏳ 0%    queries/ 按概念域拆分 + 第二语言验证
+P1: tree-sitter 查询     ✅ 100%   12 .scm files (python/javascript/go, 249 lines)
+P1: 多语言验证           ✅ 100%   JavaScriptExtractor (JS/TS/JSX, 1056 lines)
 P2: kgflow.toml 配置      ⏳ 0%    项目级配置 + 多 root 支持
 P2: Coverage 指标         ⏳ 0%    CI 阈值 + 解析质量统计
-P3: 多角色 Agent 编排     ✅ 100%   5 agent prompt + 6 artifact schema + Gate 1/2/3 流程
+P3: 多角色 Agent 编排     ✅ 100%   5 agent prompt + 6 artifact schema + Gate 1/2/3
 ```
 
 ## 设计文档

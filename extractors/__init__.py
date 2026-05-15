@@ -78,6 +78,9 @@ def _load_extractors():
     except ImportError:
         pass
     # Future: from extractors.go_extractor import GoExtractor
-    # Future: from extractors.javascript_extractor import JavaScriptExtractor
+    try:
+        from extractors.javascript_extractor import JavaScriptExtractor  # noqa: F401
+    except ImportError:
+        pass
 
 _load_extractors()
