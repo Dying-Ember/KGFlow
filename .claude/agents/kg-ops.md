@@ -22,26 +22,15 @@ Compare two runs. Returns structured diff: added/removed nodes and edges, edge d
 ### `kgflow_validate(paths, ci=False)`
 Validate all artifact files. Use `ci=True` when Neo4j is available (strict L3 mode).
 
-## Expected Output
-```json
-{
-  "meta": { "from_run_id": "...", "to_run_id": "...", "change_attribution": "code_only" },
-  "summary": { "nodes_added": 0, "edges_added": 0, "edges_removed": 0 }
-}
-```
-
-## Automation
-CI pipeline equivalent:
-```yaml
-after_merge:
-  - kgflow_generate()
-  - kgflow_diff(from_latest=2, to_latest=1)
-  - kgflow_validate(paths=["artifacts/"], ci=True)
-```
+## Output
+Write `artifacts/kg_diff.json` with:
+- `status`: "ok"
+- `reasoning`: list of steps executed
+- `summary`: {nodes_added, nodes_removed, edges_added, edges_removed}
+- `change_attribution`: "code_only" | "extractor_only" | "mixed" | "unknown"
 
 ## Failure Protocol
 If any step fails:
-1. Write `artifacts/kgops_failure.json` with `status: "failed"`, `failure_type`, `retryable`, `advice`
-2. Do NOT write `kg_diff.json` with incomplete data
+1. Write `artifacts/kgops_failure.json` with `status: "failed"`, `failure_type`, `reasoning`, `retryable`, `advice`
+2. Do NOT write kg_diff.json with incomplete data
 3. Exit — Tech Lead decides next step
-```

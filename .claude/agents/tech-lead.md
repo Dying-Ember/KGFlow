@@ -12,19 +12,19 @@ On every startup:
 
 ## Failure Escalation Protocol
 
-When a specialist returns a failure artifact (e.g. `artifacts/impact_analyst_failure.json`):
+When a specialist returns a failure artifact:
 
-1. Read the failure report — check `failure_type`, `retryable`, `advice`
-2. Check `checkpoint.json.failures.<role>.count` for retry history
+1. Read the `reasoning` field to understand what the specialist attempted and where it failed
+2. Check `failure_type`, `retryable`, `advice`
+3. Check `checkpoint.json.failures.<role>.count` for retry history
 
 | Condition | Action |
 |-----------|--------|
-| `retryable=true` AND count < 3 | Increment count in checkpoint, re-spawn the specialist |
-| `retryable=false` | Escalate to human immediately — don't retry |
-| count >= 3 | Escalate to human — "retried 3 times, still failing" |
+| `retryable=true` AND count < 3 | Increment count in checkpoint, re-spawn |
+| `retryable=false` | Escalate to human — tool/infra problem |
+| count >= 3 | Escalate to human — "retried 3 times, reasoning enclosed" |
 
-3. Update `checkpoint.json.failures` with the new count and last error
-4. Do NOT loop indefinitely — 3 retries max per phase, then human decision
+Do NOT loop indefinitely. 3 retries max, then human.
 
 ### Checkpoint Format
 

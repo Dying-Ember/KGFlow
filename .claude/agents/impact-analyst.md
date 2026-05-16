@@ -26,6 +26,8 @@ Find which modules read a specific config key — useful when the task descripti
 
 ## Output
 Write `artifacts/impact_report.json` with:
+- `status`: "ok"
+- `reasoning`: list of steps taken, key decision points, and uncertainties
 - `affected.methods`: list of method FQNs
 - `affected.modules`: list of module names
 - `affected.config_keys`: list of config file paths
@@ -33,12 +35,7 @@ Write `artifacts/impact_report.json` with:
 - `test_files_touched`: list of test file paths
 
 ## Failure Protocol
-If you cannot complete the task (tool error, unclear requirements, etc.):
-1. Write `artifacts/impact_analyst_failure.json` with:
-   - `status: "failed"`
-   - `failure_type`: one of `tool_error`, `reasoning_blocked`, `insufficient_context`
-   - `tool`: the tool that failed (if tool_error)
-   - `retryable`: true/false
-   - `advice`: what Tech Lead should do to fix it
-2. Do NOT write an impact_report.json with empty/broken data
-3. Exit — Tech Lead will read the failure report and decide
+If a tool error prevents completion:
+1. Write `artifacts/impact_analyst_failure.json` with `status: "failed"`, `failure_type`, `reasoning`, `retryable`, `advice`
+2. Do NOT write impact_report.json with broken data
+3. Exit — Tech Lead reads reasoning + failure info and decides
