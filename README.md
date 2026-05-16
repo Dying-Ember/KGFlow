@@ -62,11 +62,13 @@ uv sync
 
 ### 3. 给 Lead 派任务（核心工作流）
 
-在 Claude Code 中对 Lead 直接说开发需求，全流程自动执行：
+在终端启动 KGFlow 模式，然后对 Lead 直接说开发需求，全流程自动执行：
 
+```bash
+claude --agent kgflow-lead -c
 ```
-@lead 给 InnoShareEngine.run 加超时重试
-```
+
+进入对话后直接说：
 
 Lead 会自动编排内部流程，每个阶段完成后等你确认：
 
@@ -121,12 +123,12 @@ Automation-Insight-KGFlow/
 │   ├── ast_parser.py                ← AST 解析引擎（legacy）
 │   └── cypher_generator.py          ← Cypher 格式化 + 元信息
 ├── .claude/agents/
-│   ├── lead.md                      ← 人机接口 Agent prompt
-│   ├── architect.md                 ← 技术编排 Agent prompt（checkpoint 循环）
-│   ├── analyst.md                   ← 影响分析 Agent prompt
-│   ├── developer.md                 ← 子任务实现 Agent prompt
-│   ├── auditor.md                   ← 审计 Agent prompt
-│   └── curator.md                   ← 图谱维护 Agent prompt
+│   ├── kgflow-lead.md               ← 人机接口 Agent prompt
+│   ├── kgflow-architect.md          ← 技术编排 Agent prompt（checkpoint 循环）
+│   ├── kgflow-analyst.md            ← 影响分析 Agent prompt
+│   ├── kgflow-developer.md          ← 子任务实现 Agent prompt
+│   ├── kgflow-auditor.md            ← 审计 Agent prompt
+│   └── kgflow-curator.md            ← 图谱维护 Agent prompt
 ├── artifacts/schemas/               ← 6 种工件 JSON Schema
 ├── output/                          ← 生成的 .cypher 文件 + 存档
 ├── pyproject.toml

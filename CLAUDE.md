@@ -97,12 +97,12 @@ Sub-agent/teammate 继承父级 session 的 MCP 配置，自动可用。
 
 | Agent | 职责 | 使用的 MCP tools |
 |-------|------|------------------|
-| `lead.md` | 人机交互，接收需求，展示方案 | 无（只读 checkpoint，spawn architect）|
-| `architect.md` | 技术编排，设计+门禁+派任务 | check-parallel, cross-layer, resolve-changes |
-| `analyst.md` | 影响范围分析 | kgflow_query_impact, kgflow_query_call_chain |
-| `developer.md` | 实现单个子任务 | kgflow_query_call_chain |
-| `auditor.md` | 审计 | kgflow_query_cross_layer, kgflow_query_orphans, kgflow_validate |
-| `curator.md` | 图谱维护 | kgflow_generate, kgflow_diff, kgflow_validate |
+| `kgflow-lead.md` | 人机交互，接收需求，展示方案 | 无（只读 checkpoint，spawn architect）|
+| `kgflow-architect.md` | 技术编排，设计+门禁+派任务 | check-parallel, cross-layer, resolve-changes |
+| `kgflow-analyst.md` | 影响范围分析 | kgflow_query_impact, kgflow_query_call_chain |
+| `kgflow-developer.md` | 实现单个子任务 | kgflow_query_call_chain |
+| `kgflow-auditor.md` | 审计 | kgflow_query_cross_layer, kgflow_query_orphans, kgflow_validate |
+| `kgflow-curator.md` | 图谱维护 | kgflow_generate, kgflow_diff, kgflow_validate |
 
 ## Agent Artifact 契约
 
@@ -149,7 +149,7 @@ Reasoning 每个条目记录一个**决策点**（step/approach/finding/confiden
 | `tests/unit/extractors/` | Extractor 单元测试（test_base_extractor, test_python_extractor, test_registry）|
 | `tests/unit/tools/` | 工具单元测试（test_config, test_cypher_*, test_diff_core, test_generate_helpers, test_validate_artifacts）|
 | `tests/conftest.py` | 共享 test fixtures（sample_module_source, sample_class_source, sample_function_source, empty_source）|
-| `.claude/agents/` | 6 个 Agent 角色 prompt（lead + architect + analyst + developer + auditor + curator）|
+| `.claude/agents/` | 6 个 Agent 角色 prompt（kgflow-lead + kgflow-architect + kgflow-analyst + kgflow-developer + kgflow-auditor + kgflow-curator）|
 
 ### 工具（11个）
 
@@ -189,6 +189,6 @@ Reasoning 每个条目记录一个**决策点**（step/approach/finding/confiden
 - 代码格式：Ruff（有 `.ruff_cache`）
 - Neo4j 运行在 `bolt://localhost:7687`，凭据 `neo4j / tply7620`
 - MCP Server: 10 个 typed tools via `tools/mcp_server.py`
-- Agent 编排: `.claude/agents/*.md` 6 个角色
+- Agent 编排: `.claude/agents/kgflow-*.md` 6 个角色（CLI: `claude --agent kgflow-lead`）
 - 目标项目读取自 `kgflow.toml` 的 `[project.target]`
 - 结构化错误：统一格式 `{"error": true, "code": "...", "detail": "..."}` 输出到 stderr
