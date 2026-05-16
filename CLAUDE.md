@@ -97,6 +97,38 @@ Sub-agent/teammate 继承父级 session 的 MCP 配置，自动可用。
 | `auditor.md` | 审计 | kgflow_query_cross_layer, kgflow_query_orphans, kgflow_validate |
 | `kg-ops.md` | 图谱维护 | kgflow_generate, kgflow_diff, kgflow_validate |
 
+## Agent Artifact 契约
+
+所有 Specialist（Impact Analyst / Sub-Dev / Auditor / KG Ops）的输出统一格式如下：
+
+```json
+{
+  "status": "ok",
+  "reasoning": [
+    { "step": "确定入口方法",
+      "approach": "解析任务描述，搜索项目中的 upload 方法",
+      "finding": "发现 2 个 upload 方法，根据上下文选择了 FeishuClient.upload_file",
+      "confidence": "medium" }
+  ],
+  ...
+}
+```
+
+Status 字段只有两个值：
+- `"ok"` — 正常完成，Tech Lead 如果怀疑静默错误可以调一个工具验证 reasoning 中 confidence 最低的条目
+- `"failed"` — 工具报错，附带 `failure_type`、`retryable`、`advice`
+
+Reasoning 字段每个条目记录一个**决策点**，不是每个工具调用。字段说明：
+
+| 字段 | 含义 |
+|------|------|
+| `step` | 当时要解决的问题 |
+| `approach` | 用什么工具/方法来解决 |
+| `finding` | 得出的结论 |
+| `confidence` | 对自己的结论有多大把握（high / medium / low） |
+
+Failure 时 `reasoning` 最后一条记录出错前的上下文。Tech Lead 据此判断重试 (retry)、追问 (clarify) 还是升级给人类 (escalate)。同一个 Phase 内重试+澄清共享 3 次配额。
+
 ## 架构
 
 ### 分层设计
