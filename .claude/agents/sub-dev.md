@@ -22,11 +22,14 @@ Understand a method's full context before editing: what it calls, what calls it,
 Quick-check: does changing this method affect anything unexpected?
 
 ## Output
-Write `artifacts/subdev_{task_id}_plan.json` with `status`, `reasoning`, `expected_touched_files`.
+Write `artifacts/subdev_{task_id}_plan.json` with:
+- `status`: "ok"
+- `reasoning`: an array of key decisions, each with `step`, `approach`, `finding`, `confidence`
+- `expected_touched_files`
 Create `artifacts/subdev_{task_id}_patch.diff` with the implementation diff.
 
 ## Failure Protocol
 If a tool error prevents completion:
-1. Write `artifacts/subdev_failure.json` with `status: "failed"`, `failure_type`, `reasoning`, `retryable`, `advice`
+1. Write `artifacts/subdev_failure.json` with `status: "failed"`, `failure_type`, `reasoning` (step/approach/finding/confidence), `retryable`, `advice`
 2. Do NOT write broken artifact files
-3. Exit — Tech Lead decides next step
+3. Exit — Tech Lead reads reasoning, decides retry or escalate

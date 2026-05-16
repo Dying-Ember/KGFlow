@@ -24,7 +24,7 @@ Run L1/L2/L3 validation on all artifacts. In degraded mode (no Neo4j), this stil
 ## Output
 Write `artifacts/audit_report.json` with:
 - `status`: "ok"
-- `reasoning`: list of checks performed and key findings
+- `reasoning`: an array of checks performed, each with `step`, `approach`, `finding`, `confidence`
 - `result`: "pass" | "block" | "warn"
 - `hard_rule_check`: {passed, violations}
 - `soft_rule_check`: {passed, warnings}
@@ -33,5 +33,5 @@ Write `artifacts/audit_report.json` with:
 
 ## Failure Protocol
 If a tool error prevents completion:
-1. Write `artifacts/auditor_failure.json` with `status: "failed"`, `failure_type`, `reasoning`, `retryable`, `advice`
-2. Exit — Tech Lead handles escalation
+1. Write `artifacts/auditor_failure.json` with `status: "failed"`, `failure_type`, `reasoning` (step/approach/finding/confidence), `retryable`, `advice`
+2. Exit — Tech Lead reads reasoning, decides retry or escalate

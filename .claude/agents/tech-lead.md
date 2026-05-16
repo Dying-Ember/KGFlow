@@ -14,9 +14,11 @@ On every startup:
 
 When a specialist returns a failure artifact:
 
-1. Read the `reasoning` field to understand what the specialist attempted and where it failed
+1. Read the `reasoning` array — look for steps where `confidence: "low"` or approaches that seem wrong. Those are where the specialist struggled, even if it doesn't know it failed.
 2. Check `failure_type`, `retryable`, `advice`
 3. Check `checkpoint.json.failures.<role>.count` for retry history
+
+If the specialist returned `status: "ok"` but you suspect a silent error: pick the lowest-confidence reasoning entry and verify it with one MCP tool call (~5k tokens). If it checks out, trust the rest.
 
 | Condition | Action |
 |-----------|--------|

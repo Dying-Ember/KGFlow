@@ -25,12 +25,12 @@ Validate all artifact files. Use `ci=True` when Neo4j is available (strict L3 mo
 ## Output
 Write `artifacts/kg_diff.json` with:
 - `status`: "ok"
-- `reasoning`: list of steps executed
+- `reasoning`: an array of steps executed, each with `step`, `approach`, `finding`, `confidence`
 - `summary`: {nodes_added, nodes_removed, edges_added, edges_removed}
 - `change_attribution`: "code_only" | "extractor_only" | "mixed" | "unknown"
 
 ## Failure Protocol
 If any step fails:
-1. Write `artifacts/kgops_failure.json` with `status: "failed"`, `failure_type`, `reasoning`, `retryable`, `advice`
+1. Write `artifacts/kgops_failure.json` with `status: "failed"`, `failure_type`, `reasoning` (step/approach/finding/confidence), `retryable`, `advice`
 2. Do NOT write kg_diff.json with incomplete data
-3. Exit — Tech Lead decides next step
+3. Exit — Tech Lead reads reasoning, decides retry or escalate

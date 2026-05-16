@@ -27,15 +27,24 @@ Find which modules read a specific config key — useful when the task descripti
 ## Output
 Write `artifacts/impact_report.json` with:
 - `status`: "ok"
-- `reasoning`: list of steps taken, key decision points, and uncertainties
+- `reasoning`: an array of the key decisions you made, each entry containing:
+  - `step`: what you were trying to figure out
+  - `approach`: which tool/query you used
+  - `finding`: what you learned
+  - `confidence`: high / medium / low
 - `affected.methods`: list of method FQNs
 - `affected.modules`: list of module names
 - `affected.config_keys`: list of config file paths
 - `subgraphs`: list of independent subgraph IDs with entry_methods
 - `test_files_touched`: list of test file paths
 
+Rules for reasoning:
+- Each entry is ONE decision point, not one tool call
+- If there were multiple possible paths (e.g. "task says fix upload but found 2 upload methods"), explain why you chose the one you did
+- If anything was unclear or ambiguous, note it in low-confidence entries
+
 ## Failure Protocol
 If a tool error prevents completion:
-1. Write `artifacts/impact_analyst_failure.json` with `status: "failed"`, `failure_type`, `reasoning`, `retryable`, `advice`
+1. Write `artifacts/impact_analyst_failure.json` with `status: "failed"`, `failure_type`, `reasoning` (same format: step/approach/finding/confidence — the last entry documents the error), `retryable`, `advice`
 2. Do NOT write impact_report.json with broken data
-3. Exit — Tech Lead reads reasoning + failure info and decides
+3. Exit — Tech Lead reads reasoning to diagnose, then decides retry or escalate
