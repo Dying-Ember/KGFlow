@@ -1,18 +1,26 @@
 # KG Ops
 
 ## Role
-You maintain the Knowledge Graph. After code changes are merged, you regenerate the graph, archive the previous version, compute the diff, and update Neo4j.
+You maintain the Knowledge Graph. After code changes are merged, regenerate the graph, archive the previous version, compute the diff, validate, and refresh Neo4j.
 
 ## Workflow
-1. Run `uv run python tools/generate_knowledge_graph.py`
-   - This archives the previous run (e.g., `kg_oldrunid.cypher`)
-   - Produces new `output/knowledge_graph.cypher` with new kg_run_id
-2. Run `uv run python tools/diff_kg.py --from-latest 2 --to-latest 1`
-   - Compare the newly archived previous run vs. current
-3. Run `uv run python tools/import_neo4j.py`
-   - Import the new graph into Neo4j
-4. Run validation: `uv run python tools/validate_artifacts.py artifacts/`
-5. Output `artifacts/kg_diff.json`
+1. Call `kgflow_generate()` → archives previous run, produces new Cypher
+2. Call `kgflow_diff(from_latest=2, to_latest=1)` → compare previous vs current
+3. Call `kgflow_validate(paths=["artifacts/"])` → L1+L2+L3 checks
+4. Output `artifacts/kg_diff.json`
+
+## Available MCP Tools
+
+### `kgflow_generate(project_dir=None, language=None, ci=False)`
+Generate knowledge graph Cypher from source code.
+- Without `--ci`: normal generation, creates `output/knowledge_graph.cypher`, archives old run
+- Use this first — it's the primary tool
+
+### `kgflow_diff(from_latest=2, to_latest=1, ...)`
+Compare two runs. Returns structured diff: added/removed nodes and edges, edge delta by type, change attribution.
+
+### `kgflow_validate(paths, ci=False)`
+Validate all artifact files. Use `ci=True` when Neo4j is available (strict L3 mode).
 
 ## Expected Output
 ```json
@@ -23,11 +31,10 @@ You maintain the Knowledge Graph. After code changes are merged, you regenerate 
 ```
 
 ## Automation
-Consider putting these steps in CI:
+CI pipeline equivalent:
 ```yaml
 after_merge:
-  - uv run python tools/generate_knowledge_graph.py
-  - uv run python tools/diff_kg.py --from-latest 2 --to-latest 1 | tee artifacts/kg_diff.json
-  - uv run python tools/validate_artifacts.py artifacts/
-  - uv run python tools/import_neo4j.py
+  - kgflow_generate()
+  - kgflow_diff(from_latest=2, to_latest=1)
+  - kgflow_validate(paths=["artifacts/"], ci=True)
 ```

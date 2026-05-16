@@ -36,6 +36,45 @@ uv run pytest
 uv run pytest tests/test_file.py -k "test_name"
 ```
 
+## MCP Server（Agent 自动调用）
+
+所有工具通过 `tools/mcp_server.py` 暴露为 MCP typed tools。
+Sub-agent/teammate 继承父级 session 的 MCP 配置，自动可用。
+
+**10 个 MCP tools：**
+
+| Tool | 功能 |
+|------|------|
+| `kgflow_generate` | 生成知识图谱 Cypher |
+| `kgflow_query_impact` | 影响范围分析（上游调用者 + 下游被调用者 + 配置依赖）|
+| `kgflow_query_call_chain` | 调用链追踪（上溯/下追）|
+| `kgflow_query_check_parallel` | Gate 2 并行安全判定 |
+| `kgflow_query_cross_layer` | 架构层间依赖违规检查 |
+| `kgflow_query_resolve_changes` | git diff → Method 节点映射 |
+| `kgflow_query_config_readers` | 配置阅读者查询 |
+| `kgflow_query_orphans` | 孤立节点发现 |
+| `kgflow_diff` | Run-to-run 图谱增量对比 |
+| `kgflow_validate` | L1+L2+L3 工件校验 |
+
+## 多 Agent 工作流
+
+配置好 MCP Server 后，spawn 任意 sub-agent 自动继承所有 tools。
+`.claude/agents/` 下的 5 个 prompt 定义了各角色的 tool 使用流程：
+
+```
+Phase 1 (Impact Analyst → artifacts/impact_report.json)
+  → kgflow_query_impact + kgflow_query_call_chain
+
+Phase 2 (Lead Developer 审核, Gate 1/2/3)
+  → kgflow_query_check_parallel + kgflow_query_cross_layer
+
+Phase 3 (Sub-Dev × N 并行实现)
+
+Phase 4 (Auditor + KG Ops 并行)
+  → Auditor: kgflow_query_cross_layer + kgflow_query_orphans + kgflow_validate
+  → KG Ops:  kgflow_generate + kgflow_diff + kgflow_validate
+```
+
 ## 架构
 
 ### 分层设计
@@ -52,12 +91,12 @@ uv run pytest tests/test_file.py -k "test_name"
 
 | 目录/文件 | 作用 |
 |-----------|------|
-| `tools/` | 8 个工具：图谱生成、导入、查询、对比、校验、配置加载 |
+| `tools/` | 9 个工具：图谱生成、导入、查询、对比、校验、配置加载、MCP Server |
 | `kgflow.toml` | 项目级配置文件（语言、目标路径等）|
 | `extractors/` | 可插拔的 Extractor 框架：`base.py` 提供抽象基类 + 共享管道，`python_extractor.py` / `javascript_extractor.py` 是具体实现 |
 | `queries/<lang>/` | tree-sitter .scm 查询文件（defs, imports, calls, control_flow） |
 | `artifacts/schemas/` | 6 种工件 JSON Schema + extractor_output schema |
-| `.claude/agents/` | 5 个 Agent 角色 prompt（影响分析/开发编排/子任务/审计/图谱维护）|
+| `.claude/agents/` | 5 个 Agent 角色 prompt（通过 MCP tools 编排工作流）|
 
 ### Tools（8个）
 
@@ -71,6 +110,9 @@ uv run pytest tests/test_file.py -k "test_name"
 | `ast_parser.py` | 遗留 Python AST 解析器（V2 含 BodyAnalyzer 深度分析），被 python_extractor.py 替代中 |
 | `cypher_generator.py` | 将结构化数据转为 Cypher MERGE/SET 语句，包含硬编码映射表 |
 | `config.py` | `load_kgflow_config()` 配置加载器，`tomllib` 读取 `kgflow.toml` |
+| `errors.py` | 结构化 JSON 错误输出（错误码 + 统一格式）|
+| `neo4j_config.py` | Neo4j 凭据从 `KGFLOW_NEO4J_*` 环境变量读取 |
+| `mcp_server.py` | FastMCP Server，10 个 typed tools 供 Agent 调用 |
 
 ### Extractor 框架
 
@@ -93,4 +135,6 @@ uv run pytest tests/test_file.py -k "test_name"
 - 包管理：uv（`uv sync` / `uv run`）
 - 代码格式：Ruff（有 `.ruff_cache`）
 - Neo4j 运行在 `bolt://localhost:7687`，凭据 `neo4j / tply7620`
+- MCP Server: 10 个 typed tools via `tools/mcp_server.py`
+- Agent 编排: `.claude/agents/*.md` 5 个角色通过 MCP tools 驱动工作流
 - 目标项目读取自 `kgflow.toml` 的 `[project.target]`

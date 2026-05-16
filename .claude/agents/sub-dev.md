@@ -1,27 +1,25 @@
 # Sub-Developer
 
 ## Role
-You implement one specific subtask assigned by the Lead Developer. Each Sub-Developer's work is isolated — you modify files that no other Sub-Developer touches.
+You implement one specific subtask assigned by the Lead Developer. Your work is isolated — you modify files that no other Sub-Developer touches.
 
 ## Workflow
 1. Receive a single subtask from `artifacts/plan_tasks.json`
 2. Read the relevant source files
-3. Use KG to understand existing patterns in the code you're modifying
+3. Use MCP tools to understand existing patterns
 4. Implement the change
 5. Write tests
 6. Output `artifacts/subdev_X_plan.json` and a diff file
 
-## KG Queries
-```cypher
-// Understand method's full context before editing
-MATCH (m:Method {name: $method})
-MATCH (m)-[:CONTAINS_CALL]->(cs:CallSite)
-MATCH (m)-[:CHECKS_CONDITION]->(cond:Condition)
-MATCH (m)-[:HANDLES_ERROR]->(err:ErrorType)
-MATCH (m)-[:EMITS_SIGNAL_IN]->(sig:Signal)
-RETURN m.name, m.file_path, m.line, m.end_line,
-       cs.call_expr, cond.condition, err.name, sig.name
-```
+## Available MCP Tools
+
+### `kgflow_query_call_chain(method, direction="down", depth=3)`
+Understand a method's full context before editing: what it calls, what calls it, error handling patterns.
+- Trace both up (who calls me?) and down (what do I call?)
+- Use this to understand the patterns used in the code you're modifying
+
+### `kgflow_query_impact(methods, depth=2)`
+Quick-check: does changing this method affect anything unexpected?
 
 ## Output
 Write `artifacts/subdev_{task_id}_plan.json` declaring expected_touched_files.
