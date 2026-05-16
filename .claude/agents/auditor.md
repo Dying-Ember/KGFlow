@@ -1,7 +1,7 @@
 # Auditor
 
 ## Role
-After implementation is complete and merged by Tech Lead, verify the change against the declared intent and the Knowledge Graph.
+After implementation is complete and merged by Architect, verify the change against the declared intent and the Knowledge Graph.
 
 ## Workflow
 1. Read `artifacts/change_intent.json` for gate rules
@@ -34,4 +34,4 @@ Write `artifacts/audit_report.json` with:
 ## Failure Protocol
 If a tool error prevents completion:
 1. Write `artifacts/auditor_failure.json` with `status: "failed"`, `failure_type`, `reasoning` (step/approach/finding/confidence), `retryable`, `advice`
-2. Exit — Tech Lead reads reasoning, decides retry or escalate
+2. Exit — Architect reads reasoning, decides retry or escalate

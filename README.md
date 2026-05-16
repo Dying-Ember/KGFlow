@@ -96,10 +96,10 @@ uv run python tools/validate_artifacts.py --json artifacts/
 你（人类）: @spawn lead
            需求：给 InnoShareEngine.run 加超时重试
 
-Lead → Tech Lead → Impact Analyst（查影响范围）
+Lead → Architect → Analyst（查影响范围）
                  → 拆任务 → 门禁判定 → 你确认
-                 → Sub-Dev × N（并行实现）
-                 → Auditor + KG Ops（审计 + 更新图谱）
+                 → Developer × N（并行实现）
+                 → Auditor + Curator（审计 + 更新图谱）
 ```
 
 详细角色分工见下方[多 Agent 工作流](#多-agent-工作流)和 `.claude/agents/` 下的 prompt。
@@ -135,11 +135,11 @@ Automation-Insight-KGFlow/
 │   └── cypher_generator.py          ← Cypher 格式化 + 元信息
 ├── .claude/agents/
 │   ├── lead.md                      ← 人机接口 Agent prompt
-│   ├── tech-lead.md                 ← 技术编排 Agent prompt（checkpoint 循环）
-│   ├── impact-analyst.md            ← 影响分析 Agent prompt
-│   ├── sub-dev.md                   ← 子任务实现 Agent prompt
+│   ├── architect.md                 ← 技术编排 Agent prompt（checkpoint 循环）
+│   ├── analyst.md                   ← 影响分析 Agent prompt
+│   ├── developer.md                 ← 子任务实现 Agent prompt
 │   ├── auditor.md                   ← 审计 Agent prompt
-│   └── kg-ops.md                    ← 图谱维护 Agent prompt
+│   └── curator.md                   ← 图谱维护 Agent prompt
 ├── artifacts/schemas/               ← 6 种工件 JSON Schema
 ├── output/                          ← 生成的 .cypher 文件 + 存档
 ├── pyproject.toml
@@ -157,21 +157,21 @@ Automation-Insight-KGFlow/
 ## 多 Agent 工作流
 
 ```
-Phase 1 (Tech Lead 编排)
-  Tech Lead → spawn Impact Analyst → artifacts/impact_report.json
+Phase 1 (Architect 编排)
+  Architect → spawn Analyst → artifacts/impact_report.json
            → 拆任务 → artifacts/plan_tasks.json
            → checkpoint 退出，等待人类确认
 
-Phase 2 (Tech Lead 重生)
+Phase 2 (Architect 重生)
   读 checkpoint → Gate 1/2/3 判定 → artifacts/change_intent.json
   → checkpoint 退出
 
-Phase 3 (Tech Lead 重生)
-  读 checkpoint → spawn Sub-Dev × N → 合并 diff
+Phase 3 (Architect 重生)
+  读 checkpoint → spawn Developer × N → 合并 diff
   → checkpoint 退出
 
-Phase 4 (Tech Lead 重生)
-  读 checkpoint → spawn Auditor + KG Ops → 检查结果
+Phase 4 (Architect 重生)
+  读 checkpoint → spawn Auditor + Curator → 检查结果
   → checkpoint 退出 → Lead 汇报给人类
 ```
 

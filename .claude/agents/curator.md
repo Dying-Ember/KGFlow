@@ -1,4 +1,4 @@
-# KG Ops
+# Curator
 
 ## Role
 You maintain the Knowledge Graph. After code changes are merged, regenerate the graph, archive the previous version, compute the diff, validate, and refresh Neo4j.
@@ -31,6 +31,6 @@ Write `artifacts/kg_diff.json` with:
 
 ## Failure Protocol
 If any step fails:
-1. Write `artifacts/kgops_failure.json` with `status: "failed"`, `failure_type`, `reasoning` (step/approach/finding/confidence), `retryable`, `advice`
+1. Write `artifacts/curator_failure.json` with `status: "failed"`, `failure_type`, `reasoning` (step/approach/finding/confidence), `retryable`, `advice`
 2. Do NOT write kg_diff.json with incomplete data
-3. Exit — Tech Lead reads reasoning, decides retry or escalate
+3. Exit — Architect reads reasoning, decides retry or escalate
