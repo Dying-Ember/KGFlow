@@ -38,7 +38,7 @@
 | Python | >= 3.13 | 运行环境 |
 | [uv](https://docs.astral.sh/uv/) | 最新 | 包管理 |
 | [Neo4j](https://neo4j.com/download/) | 5.x | 图数据库（bolt://localhost:7687）|
-| 被分析项目 | — | 你的源码（默认: `D:\PythonProgramming\1\Automation-Inspection`）|
+| 被分析项目 | — | 你的源码（配置在 `kgflow.toml` 的 `[project.target]`）|
 
 ```bash
 git clone https://github.com/Dying-Ember/KGFlow.git
