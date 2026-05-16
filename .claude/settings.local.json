@@ -3,13 +3,18 @@
     "allow": [
       "Bash(uv run python tools/*)",
       "Bash(uv sync *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "WebSearch"
     ]
   },
   "mcpServers": {
     "kgflow": {
       "command": "uv",
-      "args": ["run", "python", "tools/mcp_server.py"],
+      "args": [
+        "run",
+        "python",
+        "tools/mcp_server.py"
+      ],
       "env": {
         "KGFLOW_NEO4J_PASSWORD": "tply7620"
       }
