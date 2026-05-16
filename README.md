@@ -62,10 +62,10 @@ uv sync
 
 ### 3. 给 Lead 派任务（核心工作流）
 
-在终端启动 KGFlow 模式，然后对 Lead 直接说开发需求，全流程自动执行：
+在终端启动 KGFlow 模式，进入对话后直接说开发需求，全流程自动执行：
 
 ```bash
-claude --agent kgflow-lead -c
+claude --agent kgflow-lead
 ```
 
 进入对话后直接说：
