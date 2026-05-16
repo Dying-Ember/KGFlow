@@ -91,16 +91,21 @@ uv run python tools/validate_artifacts.py artifacts/
 ```
 Automation-Insight-KGFlow/
 ├── tools/
-│   ├── ast_parser.py                ← AST 解析引擎
-│   ├── cypher_generator.py          ← Cypher 格式化 + KGMetadata 元信息
 │   ├── generate_knowledge_graph.py  ← 主入口：解析 + 生成 + 存档
+│   ├── import_neo4j.py              ← Cypher 文件导入 Neo4j
 │   ├── query_kg.py                  ← 7 个子命令的 Neo4j 查询工具
 │   ├── diff_kg.py                   ← Run-to-run 增量对比 + 变更归因
 │   ├── validate_artifacts.py        ← L1+L2+L3 工件校验
-│   └── import_neo4j.py              ← Cypher 文件导入 Neo4j
+│   ├── mcp_server.py                ← FastMCP Server（10 typed tools）
+│   ├── config.py                    ← kgflow.toml 配置加载
+│   ├── errors.py                    ← 结构化 JSON 错误码
+│   ├── neo4j_config.py              ← Neo4j 凭据（环境变量）
+│   ├── ast_parser.py                ← AST 解析引擎（legacy）
+│   └── cypher_generator.py          ← Cypher 格式化 + 元信息
 ├── .claude/agents/
+│   ├── lead.md                      ← 人机接口 Agent prompt
+│   ├── tech-lead.md                 ← 技术编排 Agent prompt（checkpoint 循环）
 │   ├── impact-analyst.md            ← 影响分析 Agent prompt
-│   ├── lead-dev.md                  ← 开发编排 Agent prompt
 │   ├── sub-dev.md                   ← 子任务实现 Agent prompt
 │   ├── auditor.md                   ← 审计 Agent prompt
 │   └── kg-ops.md                    ← 图谱维护 Agent prompt
@@ -163,10 +168,6 @@ Phase 4 (Tech Lead 重生)
   → checkpoint 退出 → Lead 汇报给人类
 ```
 
-## 设计文档
-
-完整设计方案: [kg-workflow-design.md](./kg-workflow-design.md)
-
 ## 版本
 
 - Generator: 2.0.0
@@ -177,13 +178,15 @@ Phase 4 (Tech Lead 重生)
 ```
 Phase                    Status    Items
 ─────────────────────────────────────────────────────
-P0: 核心工具链           ✅ 100%   7 tools + parser + gen
+P0: 核心工具链           ✅ 100%   7 CLI tools + parser + cypher gen
 P0: Extractor 框架       ✅ 100%   base.py + registry + python_extractor (regression 0 diff)
 P1: tree-sitter 查询     ✅ 100%   12 .scm files (python/javascript/go, 249 lines)
 P1: 多语言验证           ✅ 100%   JavaScriptExtractor (JS/TS/JSX, 1056 lines)
 P2: kgflow.toml 配置      ✅ 100%   项目级配置 + 多 root 支持
 P2: Coverage 指标         ✅ 100%   CI 阈值 + 解析质量统计
-P3: 多角色 Agent 编排     ✅ 100%   6 agent prompt + 6 artifact schema + Gate 1/2/3 + checkpoint 循环
+P3: CLI 标准化            ✅ 100%   --json, argparse, env var creds, structured errors
+P3: 多角色 Agent 编排     ✅ 100%   6 agent prompt + checkpoint 循环 + 失败升级协议
+P3: MCP Server            ✅ 100%   10 typed tools via FastMCP
 ```
 
 ## 设计文档
