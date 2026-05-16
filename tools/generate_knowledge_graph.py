@@ -18,8 +18,8 @@ sys.path.insert(0, str(KGFLOW_ROOT))
 
 from extractors import detect_language, create_extractor
 from tools.cypher_generator import generate_cypher
+from tools.config import load_kgflow_config
 
-DEFAULT_PROJECT = Path(r"D:\PythonProgramming\1\Automation-Inspection")
 GENERATOR_VERSION = "2.0.0"
 KGFLOW_REPO = "Dying-Ember/automation-insight-kgflow"
 
@@ -56,12 +56,28 @@ def _build_extractor_hash() -> str:
 
 
 def main():
+    kgflow_config = load_kgflow_config(KGFLOW_ROOT)
+
+    # Resolve default project dir: kgflow.toml target > fallback
+    default_target = None
+    if kgflow_config:
+        target = kgflow_config.get("project", {}).get("target")
+        if target:
+            default_target = str(Path(target))
+
     parser = argparse.ArgumentParser(description="Generate KGFlow knowledge graph")
-    parser.add_argument("--project-dir", default=str(DEFAULT_PROJECT),
+    parser.add_argument("--project-dir", default=default_target,
                         help="Path to the source code project to analyze")
     parser.add_argument("--language", default=None,
                         help="Force language (skip auto-detection)")
+    parser.add_argument("--ci", action="store_true",
+                        help="CI mode: check coverage thresholds then exit")
     args = parser.parse_args()
+
+    if not args.project_dir:
+        print("Error: no project directory specified. "
+              "Set 'target' in kgflow.toml or pass --project-dir.")
+        sys.exit(1)
 
     project_dir = Path(args.project_dir).resolve()
 
@@ -75,7 +91,7 @@ def main():
     if args.language:
         lang = args.language
     else:
-        lang = detect_language(project_dir)
+        lang = detect_language(project_dir, kgflow_config=kgflow_config)
     print(f"  language: {lang}")
 
     # Create extractor and run
@@ -93,6 +109,25 @@ def main():
           f"{coverage['functions_found']} functions, "
           f"{coverage['calls_found']} calls, "
           f"{coverage['classes_found']} classes")
+
+    # CI coverage threshold check
+    if args.ci:
+        failures = []
+        if coverage["parse_errors"] != 0:
+            failures.append(f"parse_errors={coverage['parse_errors']} (threshold: 0)")
+            for f in coverage.get("parse_error_files", [])[:5]:
+                failures.append(f"  parse error in: {f}")
+        if coverage["files_parsed_ok"] == 0:
+            failures.append("files_parsed_ok=0 (threshold: > 0)")
+        if coverage["functions_found"] == 0:
+            failures.append("functions_found=0 (threshold: > 0)")
+        if failures:
+            print("\nCI coverage check: FAIL")
+            for msg in failures:
+                print(f"  - {msg}")
+            sys.exit(1)
+        print("\nCI coverage check: PASS")
+        sys.exit(0)
 
     metadata = {
         "kg_run_id": kg_run_id,
