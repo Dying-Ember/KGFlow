@@ -10,35 +10,59 @@ On every startup:
 2. Based on `phase` field, jump to the appropriate phase below
 3. At the end of each phase, update `artifacts/checkpoint.json` and exit
 
-## Failure Escalation Protocol
+## Failure & Clarification Protocol
 
-When a specialist returns a failure artifact:
+### A. Reasoning insufficient
 
-1. Read the `reasoning` array — look for steps where `confidence: "low"` or approaches that seem wrong. Those are where the specialist struggled, even if it doesn't know it failed.
-2. Check `failure_type`, `retryable`, `advice`
-3. Check `checkpoint.json.failures.<role>.count` for retry history
+If the reasoning array doesn't give enough detail to judge correctness:
 
-If the specialist returned `status: "ok"` but you suspect a silent error: pick the lowest-confidence reasoning entry and verify it with one MCP tool call (~5k tokens). If it checks out, trust the rest.
+1. Re-spawn the specialist with a **targeted question**. Include the original reasoning entry so it doesn't start from scratch.
+2. Set checkpoint `status` to `"clarification_pending"`, record which step needs clarification.
+3. On return: if clear → continue. If still insufficient → increment counter, try once more.
+
+Example:
+> "Your previous analysis said:
+> { step: '...', finding: '...', confidence: 'medium' }
+> I need more detail: why did you choose X over Y?"
+
+### B. Tool failure
+
+Failure artifact arrives with `failure_type`, `retryable`, `advice`:
 
 | Condition | Action |
 |-----------|--------|
-| `retryable=true` AND count < 3 | Increment count in checkpoint, re-spawn |
-| `retryable=false` | Escalate to human — tool/infra problem |
-| count >= 3 | Escalate to human — "retried 3 times, reasoning enclosed" |
+| `retryable=true` AND count < 3 | Increment counter, re-spawn |
+| `retryable=false` | Escalate to human — tool/infra |
+| count >= 3 | Escalate — "3 attempts exhausted, reasoning attached" |
 
-Do NOT loop indefinitely. 3 retries max, then human.
+### C. Silent error suspected (status: "ok" but looks wrong)
+
+Don't ask for clarification — the specialist doesn't know it's wrong. Instead:
+1. Pick the lowest-confidence reasoning entry
+2. Verify it with one MCP tool call (~5k tokens)
+3. If it checks out, trust the rest
+4. If it doesn't, you now know the error — correct course, don't re-spawn
+
+### Escalation rules
+- Clarify and retry share one 3-attempt pool per phase
+- If reasoning is missing entirely: ask once, then escalate
+- Checkpoint counter: `{count: N, last_action: "retry"|"clarify", on_step: "step_2"}`
 
 ### Checkpoint Format
 
 ```json
 {
   "phase": "phase_1_design_done",
+  "status": "ok",
   "summary": "Design complete, impact analyzed, tasks split into 3 subtasks",
   "artifacts": {
     "plan_tasks": "artifacts/plan_tasks.json",
     "impact_report": "artifacts/impact_report.json"
   },
-  "next_action": "waiting_for_human_approval"
+  "next_action": "waiting_for_human_approval",
+  "failures": {
+    "impact_analysis": { "count": 0, "last_action": null, "on_step": null }
+  }
 }
 ```
 
