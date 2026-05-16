@@ -55,6 +55,20 @@ def _build_extractor_hash() -> str:
     }, sort_keys=True).encode()).hexdigest()[:8]
 
 
+def check_coverage_thresholds(coverage: dict) -> list[str]:
+    """CI 覆盖度阈值检查。返回 failure 列表，空 = PASS。"""
+    failures = []
+    if coverage["parse_errors"] != 0:
+        failures.append(f"parse_errors={coverage['parse_errors']} (threshold: 0)")
+        for f in coverage.get("parse_error_files", [])[:5]:
+            failures.append(f"  parse error in: {f}")
+    if coverage["files_parsed_ok"] == 0:
+        failures.append("files_parsed_ok=0 (threshold: > 0)")
+    if coverage["functions_found"] == 0:
+        failures.append("functions_found=0 (threshold: > 0)")
+    return failures
+
+
 def main():
     kgflow_config = load_kgflow_config(KGFLOW_ROOT)
 
@@ -112,15 +126,7 @@ def main():
 
     # CI coverage threshold check
     if args.ci:
-        failures = []
-        if coverage["parse_errors"] != 0:
-            failures.append(f"parse_errors={coverage['parse_errors']} (threshold: 0)")
-            for f in coverage.get("parse_error_files", [])[:5]:
-                failures.append(f"  parse error in: {f}")
-        if coverage["files_parsed_ok"] == 0:
-            failures.append("files_parsed_ok=0 (threshold: > 0)")
-        if coverage["functions_found"] == 0:
-            failures.append("functions_found=0 (threshold: > 0)")
+        failures = check_coverage_thresholds(coverage)
         if failures:
             print("\nCI coverage check: FAIL")
             for msg in failures:

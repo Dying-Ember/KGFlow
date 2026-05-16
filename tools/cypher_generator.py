@@ -1,13 +1,8 @@
 """Generate Neo4j Cypher statements from AST-parsed project data and config files."""
 
 import json
-import sys
+import tomllib
 from pathlib import Path
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 
 # ── Hardcoded mapping tables ──
