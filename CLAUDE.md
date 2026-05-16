@@ -56,24 +56,46 @@ Sub-agent/teammate 继承父级 session 的 MCP 配置，自动可用。
 | `kgflow_diff` | Run-to-run 图谱增量对比 |
 | `kgflow_validate` | L1+L2+L3 工件校验 |
 
-## 多 Agent 工作流
+## 多 Agent 工作流（Checkpoint 驱动）
 
-配置好 MCP Server 后，spawn 任意 sub-agent 自动继承所有 tools。
-`.claude/agents/` 下的 5 个 prompt 定义了各角色的 tool 使用流程：
+架构分三层，每层通过 artifact 文件通信，不传递对话 transcript。
 
 ```
-Phase 1 (Impact Analyst → artifacts/impact_report.json)
-  → kgflow_query_impact + kgflow_query_call_chain
+你（人类）←→ Lead
+   ctx: ~30k，只装对话 + checkpoint 状态
+   不读任何技术 artifact
 
-Phase 2 (Lead Developer 审核, Gate 1/2/3)
-  → kgflow_query_check_parallel + kgflow_query_cross_layer
+   ↓ artifacts/task_brief.md, artifacts/checkpoint.json
 
-Phase 3 (Sub-Dev × N 并行实现)
+   Tech Lead（技术编排）
+     ctx ~80k，每次重生读 checkpoint 决定从哪个 Phase 继续
+     每个 Phase 结束时写 checkpoint → 退出 → 释放 ctx
 
-Phase 4 (Auditor + KG Ops 并行)
-  → Auditor: kgflow_query_cross_layer + kgflow_query_orphans + kgflow_validate
-  → KG Ops:  kgflow_generate + kgflow_diff + kgflow_validate
+   ├─ Phase 1: spawn Impact Analyst → impact_report + plan_tasks
+   │           写 checkpoint，等人类确认
+   ├─ Phase 2: Gate 判定 → change_intent.json
+   │           写 checkpoint，Lead 开始派 Sub-Dev
+   ├─ Phase 3: spawn Sub-Dev × N → 合并 diff
+   │           写 checkpoint
+   └─ Phase 4: spawn Auditor + KG Ops → 检查结果
+               写 checkpoint = 完成
+
+        ↓ artifacts/ 通信
+
+   Specialists（Impact Analyst / Sub-Dev / Auditor / KG Ops）
+     ctx 每次重生，隔离干净
 ```
+
+### 角色列表
+
+| Agent | 职责 | 使用的 MCP tools |
+|-------|------|------------------|
+| `lead.md` | 人机交互，接收需求，展示方案 | 无（只读 checkpoint，spawn tech-lead）|
+| `tech-lead.md` | 技术编排，设计+门禁+派任务 | check-parallel, cross-layer, resolve-changes |
+| `impact-analyst.md` | 影响范围分析 | kgflow_query_impact, kgflow_query_call_chain |
+| `sub-dev.md` | 实现单个子任务 | kgflow_query_call_chain |
+| `auditor.md` | 审计 | kgflow_query_cross_layer, kgflow_query_orphans, kgflow_validate |
+| `kg-ops.md` | 图谱维护 | kgflow_generate, kgflow_diff, kgflow_validate |
 
 ## 架构
 
@@ -96,7 +118,7 @@ Phase 4 (Auditor + KG Ops 并行)
 | `extractors/` | 可插拔的 Extractor 框架：`base.py` 提供抽象基类 + 共享管道，`python_extractor.py` / `javascript_extractor.py` 是具体实现 |
 | `queries/<lang>/` | tree-sitter .scm 查询文件（defs, imports, calls, control_flow） |
 | `artifacts/schemas/` | 6 种工件 JSON Schema + extractor_output schema |
-| `.claude/agents/` | 5 个 Agent 角色 prompt（通过 MCP tools 编排工作流）|
+| `.claude/agents/` | 6 个 Agent 角色 prompt（checkpoint 循环驱动工作流）|
 
 ### Tools（8个）
 

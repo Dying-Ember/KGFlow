@@ -184,7 +184,7 @@ P1: tree-sitter 查询     ✅ 100%   12 .scm files (python/javascript/go, 249 l
 P1: 多语言验证           ✅ 100%   JavaScriptExtractor (JS/TS/JSX, 1056 lines)
 P2: kgflow.toml 配置      ✅ 100%   项目级配置 + 多 root 支持
 P2: Coverage 指标         ✅ 100%   CI 阈值 + 解析质量统计
-P3: 多角色 Agent 编排     ✅ 100%   5 agent prompt + 6 artifact schema + Gate 1/2/3
+P3: 多角色 Agent 编排     ✅ 100%   6 agent prompt + 6 artifact schema + Gate 1/2/3 + checkpoint 循环
 ```
 
 ## 设计文档
