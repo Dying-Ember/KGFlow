@@ -146,37 +146,13 @@ Automation-Insight-KGFlow/
 └── README.md
 ```
 
-## 图模型
+## 图模型（Schema 定义）
 
-| 节点类型 | 数量 | 说明 |
-|----------|------|------|
-| `Module` | 33 | Python 模块 |
-| `Class` | 78 | 类定义 |
-| `Method` | 500 | 方法（含 file_path / line / end_line）|
-| `Function` | 111 | 独立函数 |
-| `CallSite` | ~4,900 | 方法体内的函数调用点 |
-| `Condition` | ~1,700 | if/while 分支条件 |
-| `ErrorType` | 16 | 捕获/抛出的异常类型 |
-| `Signal` | 17 | Qt 信号 |
-| `ConfigFile` | 4 | TOML/JSON 配置文件 |
-| `WorkerThread` | 5 | QThread 工作线程 |
-| `ExternalSystem` | 3 | 飞书 / TransTrack / InnoShare |
-| `KGMetadata` | 每 run | 版本元信息 |
+**节点类型：** Module, Class, Method, Function, CallSite, Condition, ErrorType, Signal, ConfigFile, ConfigSection, WorkerThread, ExternalSystem, KGMetadata
 
-| 关系类型 | 数量 | 说明 |
-|----------|------|------|
-| `CALLS_METHOD` | ~50 | 方法间调用链（含 confidence 置信度）|
-| `CONTAINS_CALL` | ~3,900 | 方法包含的调用点 |
-| `HANDLES_ERROR` | ~100 | 异常处理关联 |
-| `CHECKS_CONDITION` | ~1,200 | 分支条件关联 |
-| `OWNS_METHOD` | ~500 | 类拥有方法 |
-| `DEFINES_CLASS` | ~30 | 模块定义类 |
-| `READS_CONFIG` | ~18 | 模块读取配置文件 |
-| `IMPORTS` | ~31 | 模块间导入 |
-| `INHERITS` | ~6 | 类继承 |
-| `COMPOSES` | ~11 | 类组合 |
-| `DEPENDS_ON` | ~8 | 外部系统依赖 |
-| `EMITS_SIGNAL_IN` | ~27 | 方法发射信号 |
+**关系类型：** IMPORTS, DEFINES_CLASS, OWNS_METHOD, COMPOSES, INHERITS, CALLS_METHOD({confidence}), CONTAINS_CALL, HANDLES_ERROR, RAISES, CHECKS_CONDITION, EMITS_SIGNAL_IN, READS_CONFIG, DEPENDS_ON, TESTS, MOCKS
+
+节点/边的实际数量取决于被分析项目的规模。可通过 `kgflow_diff` 查看不同 run 之间的增量变化。
 
 ## 多 Agent 工作流
 
