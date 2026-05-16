@@ -20,19 +20,20 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+KGFLOW_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(KGFLOW_ROOT))
+
 try:
     from neo4j import GraphDatabase, READ_ACCESS
 except ImportError:
-    print("需要安装 neo4j driver: uv add neo4j", file=sys.stderr)
+    print("Install neo4j driver: uv add neo4j", file=sys.stderr)
     sys.exit(1)
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
-NEO4J_URI = "bolt://localhost:7687"
-NEO4J_USER = "neo4j"
-NEO4J_PASSWORD = "tply7620"
+from tools.neo4j_config import NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
 _DEFAULT_TIMEOUT = 10  # seconds
 _DEFAULT_ROW_LIMIT = 500
 
@@ -208,7 +209,7 @@ class QueryKG:
 
     def orphans_by_label(self, label):
         if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", label):
-            raise ValueError(f"无效的 label: {label}")
+            raise ValueError(f"invalid label: {label}")
         return self._run(
             f"MATCH (n:{label}) WHERE NOT (n)--() "
             "RETURN n.name AS name, n.file_path AS file_path "
@@ -228,7 +229,7 @@ class QueryKG:
             conditions.append("b.name STARTS WITH $tp")
             params["tp"] = to_prefix
         if not conditions:
-            raise ValueError("至少需要 --from-layer 或 --to-layer")
+            raise ValueError("at least one of --from-layer / --to-layer required")
         where = " AND ".join(conditions)
         return self._run(
             "MATCH (a:Module)-[:IMPORTS]->(b:Module) "
@@ -438,11 +439,11 @@ def cmd_check_parallel(args):
         task_a = json.loads(args.task_a_methods)
         task_b = json.loads(args.task_b_methods)
     except json.JSONDecodeError as e:
-        print(f"JSON 解析错误: {e}", file=sys.stderr)
+        print(f"JSON parse error: {e}", file=sys.stderr)
         sys.exit(1)
 
     if not isinstance(task_a, list) or not isinstance(task_b, list):
-        print("错误: --task-a-methods 和 --task-b-methods 必须是 JSON 数组",
+        print("error: both --task-a-methods and --task-b-methods must be JSON arrays",
               file=sys.stderr)
         sys.exit(1)
 
@@ -517,11 +518,11 @@ def cmd_impact(args):
     try:
         entry_methods = json.loads(args.methods)
     except json.JSONDecodeError as e:
-        print(f"JSON 解析错误: {e}", file=sys.stderr)
+        print(f"JSON parse error: {e}", file=sys.stderr)
         sys.exit(1)
 
     if not isinstance(entry_methods, list):
-        print("错误: --methods 必须是 JSON 数组", file=sys.stderr)
+        print("error: --methods must be a JSON array", file=sys.stderr)
         sys.exit(1)
 
     depth = args.depth
@@ -710,7 +711,7 @@ def cmd_cross_layer(args):
     from_layer = args.from_layer
     to_layer = args.to_layer
     if not from_layer and not to_layer:
-        print("错误: 至少需要 --from-layer 或 --to-layer", file=sys.stderr)
+        print("error: at least one of --from-layer / --to-layer required", file=sys.stderr)
         sys.exit(1)
     kg = QueryKG()
     rows = kg.cross_layer_imports(from_prefix=from_layer, to_prefix=to_layer)
@@ -749,7 +750,7 @@ def main():
     )
     parser.add_argument(
         "--timeout-ms", type=int, default=_DEFAULT_TIMEOUT * 1000,
-        help=f"查询超时毫秒 (默认 {_DEFAULT_TIMEOUT * 1000})",
+        help=f"Query timeout in ms (default {_DEFAULT_TIMEOUT * 1000})",
     )
 
     sub = parser.add_subparsers(dest="command", required=True)
@@ -757,95 +758,95 @@ def main():
     # ---- resolve-changes ----
     p_resolve = sub.add_parser(
         "resolve-changes",
-        help="映射 git diff 文件变动到 KG Method 节点",
+        help="Map git diff file changes to KG Method nodes",
     )
     p_resolve.add_argument(
         "--git-diff",
-        help="git diff --name-status 输出文件路径 (不提供则自动运行 git diff)",
+        help="Path to git diff --name-status output (auto-run if not provided)",
     )
     p_resolve.add_argument(
         "--project-root", default=".",
-        help="项目根目录 (默认当前目录)",
+        help="Project root directory (default: current dir)",
     )
 
     # ---- check-parallel ----
     p_check = sub.add_parser(
         "check-parallel",
-        help="Gate 2 并行安全检测",
+        help="Gate 2 parallel safety check",
     )
     p_check.add_argument(
         "--task-a-methods", required=True,
-        help='任务 A 的 method FQN JSON 数组 (例: \'["fqn1","fqn2"]\')',
+        help='Task A method FQNs as JSON array (e.g. \'["fqn1","fqn2"]\')',
     )
     p_check.add_argument(
         "--task-b-methods", required=True,
-        help='任务 B 的 method FQN JSON 数组',
+        help='Task B method FQNs as JSON array',
     )
 
     # ---- impact ----
     p_impact = sub.add_parser(
         "impact",
-        help="查找变更指定方法后受影响的全部方法/类/配置",
+        help="Find all methods/classes/config affected by changing given methods",
     )
     p_impact.add_argument(
         "--methods", required=True,
-        help='入口 method FQN JSON 数组',
+        help='Entry method FQNs as JSON array',
     )
     p_impact.add_argument(
         "--depth", type=int, default=3,
-        help="遍历深度 (默认 3)",
+        help="Traversal depth (default: 3)",
     )
 
     # ---- call-chain ----
     p_chain = sub.add_parser(
         "call-chain",
-        help="追踪调用链 (上/下游)",
+        help="Trace call chain (upstream/downstream)",
     )
     p_chain.add_argument(
         "--method", required=True,
-        help="入口 method FQN",
+        help="Entry method FQN",
     )
     p_chain.add_argument(
         "--direction", choices=["up", "down"], default="down",
-        help="追踪方向 (默认 down)",
+        help="Trace direction: up or down (default: down)",
     )
     p_chain.add_argument(
         "--depth", type=int, default=3,
-        help="追踪深度 (默认 3)",
+        help="Trace depth (default: 3)",
     )
 
     # ---- config-readers ----
     p_config_readers = sub.add_parser(
         "config-readers",
-        help="查找读取给定配置键的方法",
+        help="Find modules that read a given config key",
     )
     p_config_readers.add_argument(
         "--config-key", required=True,
-        help='配置键路径 (例: "feishu.toml.bitable.app_token")',
+        help='Config key path (e.g. "feishu.toml.bitable.app_token")',
     )
 
     # ---- orphans ----
     p_orphans = sub.add_parser(
         "orphans",
-        help="查找无关系的孤立节点",
+        help="Find orphan nodes with no relationships",
     )
     p_orphans.add_argument(
         "--label",
-        help="按标签过滤 (例: Method, Class, Module)",
+        help="Filter by label (e.g. Method, Class, Module)",
     )
 
     # ---- cross-layer ----
     p_cross = sub.add_parser(
         "cross-layer",
-        help="检查架构层次依赖违规",
+        help="Check architecture layer dependency violations",
     )
     p_cross.add_argument(
         "--from-layer",
-        help="来源层前缀 (例: engine)",
+        help="Source layer prefix (e.g. engine)",
     )
     p_cross.add_argument(
         "--to-layer",
-        help="目标层前缀 (例: app)",
+        help="Target layer prefix (e.g. app)",
     )
 
     args = parser.parse_args()
@@ -872,12 +873,12 @@ def main():
     except Exception as e:
         msg = str(e)
         if "timed out" in msg.lower() or "timeout" in msg.lower():
-            print(f"查询超时: {e}\n提示: 使用 --timeout-ms 调整超时值", file=sys.stderr)
+            print(f"Query timed out: {e}\nHint: use --timeout-ms to adjust", file=sys.stderr)
         elif "Unable to connect" in msg or "connect" in msg.lower():
-            print(f"无法连接 Neo4j: {e}\n"
-                  f"请确认 Neo4j 运行在 {NEO4J_URI}", file=sys.stderr)
+            print(f"Cannot connect to Neo4j: {e}\n"
+                  f"Ensure Neo4j is running at {NEO4J_URI}", file=sys.stderr)
         else:
-            print(f"错误: {e}", file=sys.stderr)
+            print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 

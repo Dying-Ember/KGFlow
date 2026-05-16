@@ -7,17 +7,23 @@ Usage:
 
 Performs L1/L2 validation + L3 cross-reference checks (Neo4j required for full L3).
 """
+import argparse
 import json
 import os
 import re
 import sys
 from pathlib import Path
 
+KGFLOW_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(KGFLOW_ROOT))
+
 try:
     from neo4j import GraphDatabase
     HAS_NEO4J = True
 except ImportError:
     HAS_NEO4J = False
+
+from tools.neo4j_config import NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
 
 NEO4J_CONNECTED = None  # None=unknown, True=connected, False=degraded
 
@@ -45,8 +51,8 @@ def verify_run_id_in_neo4j(kg_run_id: str) -> tuple:
     if not HAS_NEO4J:
         return True, "degraded (no neo4j driver)"
     try:
-        driver = GraphDatabase.driver("bolt://localhost:7687",
-                                       auth=("neo4j", "tply7620"))
+        driver = GraphDatabase.driver(NEO4J_URI,
+                                       auth=(NEO4J_USER, NEO4J_PASSWORD))
         with driver.session(database="neo4j") as session:
             result = session.run(
                 "MATCH (m:KGMetadata {kg_run_id: $rid}) RETURN m.kg_run_id",
@@ -79,8 +85,8 @@ def check_neo4j_connectivity():
         NEO4J_CONNECTED = False
         return
     try:
-        driver = GraphDatabase.driver("bolt://localhost:7687",
-                                       auth=("neo4j", "tply7620"))
+        driver = GraphDatabase.driver(NEO4J_URI,
+                                       auth=(NEO4J_USER, NEO4J_PASSWORD))
         driver.verify_connectivity()
         driver.close()
         NEO4J_CONNECTED = True
@@ -258,54 +264,75 @@ def validate_file(filepath: Path):
 
 
 def main():
-    args = sys.argv[1:]
-    if not args:
-        print("Usage: uv run python tools/validate_artifacts.py <path> [path...]")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Validate KGFlow artifact JSON files (L1/L2/L3)",
+    )
+    parser.add_argument("paths", nargs="+",
+                        help="Artifact JSON files or directories to validate")
+    parser.add_argument("--json", action="store_true",
+                        help="Output structured JSON instead of human-readable text")
+    parser.add_argument("--ci", action="store_true",
+                        help="CI mode: fail on L3 degradation (Neo4j required)")
+    args = parser.parse_args()
 
     # Probe Neo4j connectivity once before processing files
     global NEO4J_CONNECTED
     check_neo4j_connectivity()
 
+    if args.ci and not NEO4J_CONNECTED:
+        print("Error: --ci mode requires Neo4j connectivity", file=sys.stderr)
+        sys.exit(1)
+
     total = 0
     passed = 0
     failed = 0
+    file_results = {}
 
-    for arg in args:
+    for arg in args.paths:
         path = Path(arg)
         if path.is_dir():
             files = sorted(path.glob("*.json"))
         elif path.is_file():
             files = [path]
         else:
-            print(f"路径不存在: {path}", file=sys.stderr)
+            if args.json:
+                file_results[arg] = {"pass": False, "errors": [f"path not found: {arg}"], "l3": {}}
+            else:
+                print(f"path not found: {arg}", file=sys.stderr)
             failed += 1
             continue
 
         for f in files:
             total += 1
             name, ok, errs, l3_results = validate_file(f)
+            file_results[name] = {"pass": ok, "errors": errs, "l3": l3_results}
             if ok:
-                print(f"  PASS  {name}")
                 passed += 1
             else:
-                print(f"  FAIL  {name}")
-                for e in errs:
-                    print(f"        {e}")
                 failed += 1
-            if l3_results:
-                for check_name, result in l3_results.items():
-                    status = "PASS" if result["passed"] else "FAIL"
-                    print(f"    L3 {check_name}: {status} ({result['detail']})")
 
-    summary = f"\n{total} files: {passed} passed, {failed} failed"
-    l3_mode = "full" if NEO4J_CONNECTED else "degraded"
-    print(f"{summary}")
-    print(f"L3 mode: {l3_mode} (Neo4j {'connected' if NEO4J_CONNECTED else 'not connected'})")
+    if args.json:
+        output = {
+            "files": file_results,
+            "summary": {"total": total, "passed": passed, "failed": failed},
+            "l3_mode": "full" if NEO4J_CONNECTED else "degraded",
+        }
+        print(json.dumps(output, ensure_ascii=False, indent=2))
+    else:
+        for name, result in file_results.items():
+            status = "PASS" if result["pass"] else "FAIL"
+            print(f"  {status}  {name}")
+            for e in result["errors"]:
+                print(f"        {e}")
+            for check_name, l3r in result["l3"].items():
+                s = "PASS" if l3r["passed"] else "FAIL"
+                print(f"    L3 {check_name}: {s} ({l3r['detail']})")
+        l3_mode = "full" if NEO4J_CONNECTED else "degraded"
+        print(f"\n{total} files: {passed} passed, {failed} failed")
+        print(f"L3 mode: {l3_mode} (Neo4j {'connected' if NEO4J_CONNECTED else 'not connected'})")
+
     if failed > 0:
         sys.exit(1)
-    else:
-        sys.exit(0)
 
 
 if __name__ == "__main__":

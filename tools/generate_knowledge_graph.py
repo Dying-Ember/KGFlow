@@ -86,6 +86,8 @@ def main():
                         help="Force language (skip auto-detection)")
     parser.add_argument("--ci", action="store_true",
                         help="CI mode: check coverage thresholds then exit")
+    parser.add_argument("--json", action="store_true",
+                        help="Output structured JSON summary")
     args = parser.parse_args()
 
     if not args.project_dir:
@@ -166,7 +168,33 @@ def main():
     output_path = output_dir / "knowledge_graph.cypher"
     output_path.write_text(cypher, encoding="utf-8")
     lines = cypher.splitlines()
-    print(f"Generated: {output_path} ({len(lines)} lines)")
+
+    archived_name = None
+    if args.ci:
+        pass  # already handled above
+    else:
+        # Check if we archived something earlier
+        pass
+
+    if args.json:
+        import json as _json
+        summary = {
+            "kg_run_id": kg_run_id,
+            "cypher_file": str(output_path),
+            "lines": len(lines),
+            "language": lang,
+            "coverage": {
+                "files_scanned": coverage["files_scanned"],
+                "files_parsed_ok": coverage["files_parsed_ok"],
+                "parse_errors": coverage["parse_errors"],
+                "functions_found": coverage["functions_found"],
+                "calls_found": coverage["calls_found"],
+                "classes_found": coverage["classes_found"],
+            },
+        }
+        print(_json.dumps(summary, ensure_ascii=False, indent=2))
+    else:
+        print(f"Generated: {output_path} ({len(lines)} lines)")
 
 
 if __name__ == "__main__":
