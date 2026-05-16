@@ -1,7 +1,7 @@
 # Auditor
 
 ## Role
-After implementation is complete and merged by Lead Developer, verify the change against the declared intent and the Knowledge Graph.
+After implementation is complete and merged by Tech Lead, verify the change against the declared intent and the Knowledge Graph.
 
 ## Workflow
 1. Read `artifacts/change_intent.json` for gate rules

@@ -145,23 +145,22 @@ Automation-Insight-KGFlow/
 ## 多 Agent 工作流
 
 ```
-Phase 1 (并行)
-  Impact Analyst  → artifacts/impact_report.json   ← 查 KG 做影响分析
-  Lead Developer  → artifacts/plan_tasks.json       ← 拆分任务
+Phase 1 (Tech Lead 编排)
+  Tech Lead → spawn Impact Analyst → artifacts/impact_report.json
+           → 拆任务 → artifacts/plan_tasks.json
+           → checkpoint 退出，等待人类确认
 
-Phase 2 (Lead 审核)
-  三层 Gate 判定并行安全性:
-    Gate 1: git diff 文件级冲突
-    Gate 2: KG 调用/配置依赖链
-    Gate 3: 人工契约确认
-  输出 artifacts/change_intent.json（门禁标准）
+Phase 2 (Tech Lead 重生)
+  读 checkpoint → Gate 1/2/3 判定 → artifacts/change_intent.json
+  → checkpoint 退出
 
-Phase 3 (并行执行)
-  Sub-Dev × N 各自实现 → artifacts/subdev_*.diff
+Phase 3 (Tech Lead 重生)
+  读 checkpoint → spawn Sub-Dev × N → 合并 diff
+  → checkpoint 退出
 
-Phase 4 (并行)
-  Auditor     → artifacts/audit_report.json         ← 对照 intent 审计
-  KG Ops      → artifacts/kg_diff.json              ← 重新生成 + diff
+Phase 4 (Tech Lead 重生)
+  读 checkpoint → spawn Auditor + KG Ops → 检查结果
+  → checkpoint 退出 → Lead 汇报给人类
 ```
 
 ## 设计文档

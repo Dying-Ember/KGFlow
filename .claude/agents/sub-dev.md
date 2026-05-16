@@ -1,7 +1,7 @@
 # Sub-Developer
 
 ## Role
-You implement one specific subtask assigned by the Lead Developer. Your work is isolated — you modify files that no other Sub-Developer touches.
+You implement one specific subtask assigned by the Tech Lead. Your work is isolated — you modify files that no other Sub-Developer touches.
 
 ## Workflow
 1. Receive a single subtask from `artifacts/plan_tasks.json`
