@@ -1,26 +1,32 @@
 # KGFlow — Knowledge Graph Assisted Development Workflow
 
-将项目代码转换 Neo4j 知识图谱，并通过多 Agent 协作实现 Code Review、影响分析、并行开发安全判定和架构门禁的 CLI 工具链。
+将项目源码转化为 Neo4j 知识图谱作为 AI Agent 的共享记忆，并通过多角色 Agent 协作（Lead → Architect → Analyst/Developer/Auditor/Curator）自动完成代码分析、变更影响评估和架构门禁的 AI Agent 编排系统。
 
 ## 核心能力
 
 ```
-git diff  →  changed_methods  →  Gate 并行判定  →  审计门禁 → 结论
-                                      │
-项目源码 ─→ AST 解析 ─→ Neo4j 图谱     │
-                ↑                      │
-            代码变更 ──────────────────┘
+┌─────────────────────────────────────────────────┐
+│  编排层  Agent 工作流                             │
+│  claude --agent kgflow-lead                      │
+│  Lead → Architect → Analyst/Developer/          │
+│         Auditor/Curator                          │
+│  通信协议: artifacts/ + checkpoint 循环          │
+├─────────────────────────────────────────────────┤
+│  接口层  MCP Server (10 typed tools)             │
+├─────────────────────────────────────────────────┤
+│  数据层  源码 → AST/树解析 → Neo4j 知识图谱      │
+└─────────────────────────────────────────────────┘
 ```
 
-| 能力 | 工具 | 说明 |
+| 能力 | 入口 | 说明 |
 |------|------|------|
 | 图谱生成 | `generate_knowledge_graph.py` | 用 Python `ast` 模块解析源码，生成 Cypher 导入脚本 |
 | 增量对比 | `diff_kg.py` | 比较两次生成结果，输出节点/边增量 + 变更归因 |
-| 影响分析 | `query_kg.py impact` | 输入方法，输出调用链、配置引用、测试覆盖 |
-| 并发判定 | `query_kg.py check-parallel` | 两层 Gate 判断两个子任务能否并行开发 |
-| 调用链 | `query_kg.py call-chain` | 上溯调用者/下追被调用者 |
-| 架构检查 | `query_kg.py cross-layer` | 检测层间依赖违规（如 engine → app）|
-| 变更映射 | `query_kg.py resolve-changes` | git diff → KG Method 节点映射 |
+| 影响分析 | `kgflow_query_impact` (MCP) | 输入方法，输出调用链、配置引用、测试覆盖 |
+| 并发判定 | `kgflow_query_check_parallel` (MCP) | 两层 Gate 判断两个子任务能否并行开发 |
+| 调用链 | `kgflow_query_call_chain` (MCP) | 上溯调用者/下追被调用者 |
+| 架构检查 | `kgflow_query_cross_layer` (MCP) | 检测层间依赖违规（如 engine → app）|
+| 变更映射 | `kgflow_query_resolve_changes` (MCP) | git diff → KG Method 节点映射 |
 | 工件校验 | `validate_artifacts.py` | L1 结构 + L2 枚举 + L3 Neo4j 交叉引用 |
 
 ## 快速开始
