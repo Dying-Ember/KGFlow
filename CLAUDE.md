@@ -118,9 +118,9 @@ Sub-agent/teammate 继承父级 session 的 MCP 配置，自动可用。
 | `extractors/` | 可插拔的 Extractor 框架：`base.py` 提供抽象基类 + 共享管道，`python_extractor.py` / `javascript_extractor.py` 是具体实现 |
 | `queries/<lang>/` | tree-sitter .scm 查询文件（defs, imports, calls, control_flow） |
 | `artifacts/schemas/` | 6 种工件 JSON Schema + extractor_output schema |
-| `.claude/agents/` | 6 个 Agent 角色 prompt（checkpoint 循环驱动工作流）|
+| `.claude/agents/` | 6 个 Agent 角色 prompt（三层编排 + checkpoint 循环 + 失败升级协议）|
 
-### Tools（8个）
+### Tools（11个）
 
 | 工具 | 功能 |
 |------|------|
@@ -147,10 +147,6 @@ Sub-agent/teammate 继承父级 session 的 MCP 配置，自动可用。
 
 12 种节点类型（Module, Class, Method, Function, CallSite, Condition, ErrorType, Signal, ConfigFile, ConfigSection, WorkerThread, ExternalSystem），14 种关系类型（IMPORTS, DEFINES_CLASS, OWNS_METHOD, COMPOSES, INHERITS, CALLS_METHOD, CONTAINS_CALL, HANDLES_ERROR, RAISES, CHECKS_CONDITION, EMITS_SIGNAL_IN, READS_CONFIG, DEPENDS_ON, TESTS/MOCKS 等）。
 
-### 多 Agent 工作流
-
-4 阶段：Impact Analyst（并行）→ Lead Developer（门禁审核）→ Sub-Dev × N（并行）→ Auditor + KG Ops（并行）。5 个 Agent prompt 在 `.claude/agents/` 下。
-
 ### 技术栈
 
 - Python >= 3.13（`.python-version`），依赖：neo4j, tree-sitter, tree-sitter-javascript
@@ -158,5 +154,5 @@ Sub-agent/teammate 继承父级 session 的 MCP 配置，自动可用。
 - 代码格式：Ruff（有 `.ruff_cache`）
 - Neo4j 运行在 `bolt://localhost:7687`，凭据 `neo4j / tply7620`
 - MCP Server: 10 个 typed tools via `tools/mcp_server.py`
-- Agent 编排: `.claude/agents/*.md` 5 个角色通过 MCP tools 驱动工作流
+- Agent 编排: `.claude/agents/*.md` 6 个角色（lead + tech-lead + 4 specialists）
 - 目标项目读取自 `kgflow.toml` 的 `[project.target]`
