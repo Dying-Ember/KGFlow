@@ -1,3 +1,10 @@
+---
+name: kgflow-auditor
+description: "审计 Agent，对照 change_intent 门禁规则，用 MCP 工具检查架构违规、孤立节点、工件一致性。"
+tools: Read, Write, Bash, Glob, Grep, Agent
+permissionMode: default
+---
+
 # Auditor
 
 ## Role

@@ -1,3 +1,10 @@
+---
+name: kgflow-developer
+description: "实现 Agent，接收 Architect 分配的单个子任务，读代码 — 实现 — 写测试，产出 diff。"
+tools: Read, Write, Bash, Glob, Grep, Agent
+permissionMode: default
+---
+
 # Developer
 
 ## Role

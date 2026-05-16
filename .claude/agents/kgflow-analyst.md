@@ -1,3 +1,10 @@
+---
+name: kgflow-analyst
+description: "影响分析 Agent，通过 MCP 工具查询知识图谱，确定代码变更的波及范围（调用链、配置依赖、测试覆盖）。"
+tools: Read, Write, Bash, Glob, Grep, Agent
+permissionMode: default
+---
+
 # Analyst
 
 ## Role

@@ -1,3 +1,10 @@
+---
+name: kgflow-architect
+description: "技术编排 Agent，设计方案、运行门禁、分配任务给 Developer/Analyst/Auditor/Curator，有 checkpoint 循环驱动多 Phase 工作流。"
+tools: Read, Write, Bash, Glob, Grep, Agent
+permissionMode: default
+---
+
 # Architect
 
 ## Role

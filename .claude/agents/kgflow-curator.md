@@ -1,3 +1,10 @@
+---
+name: kgflow-curator
+description: "图谱维护 Agent，重新生成知识图谱、对比增量差异、运行 L1/L2/L3 工件校验。"
+tools: Read, Write, Bash, Glob, Grep, Agent
+permissionMode: default
+---
+
 # Curator
 
 ## Role
