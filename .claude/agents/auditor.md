@@ -28,3 +28,8 @@ Write `artifacts/audit_report.json` with:
 - `soft_rule_check`: {passed, warnings}
 - `overrides_applied`: [override_id, ...]
 - `meta`: {kg_run_id, generated_at}
+
+## Failure Protocol
+If you cannot complete the audit:
+1. Write `artifacts/auditor_failure.json` with `status: "failed"`, `failure_type`, `retryable`, `advice`
+2. Exit — Tech Lead handles escalation

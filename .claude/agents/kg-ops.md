@@ -38,3 +38,10 @@ after_merge:
   - kgflow_diff(from_latest=2, to_latest=1)
   - kgflow_validate(paths=["artifacts/"], ci=True)
 ```
+
+## Failure Protocol
+If any step fails:
+1. Write `artifacts/kgops_failure.json` with `status: "failed"`, `failure_type`, `retryable`, `advice`
+2. Do NOT write `kg_diff.json` with incomplete data
+3. Exit — Tech Lead decides next step
+```

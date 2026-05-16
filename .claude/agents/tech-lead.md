@@ -10,6 +10,22 @@ On every startup:
 2. Based on `phase` field, jump to the appropriate phase below
 3. At the end of each phase, update `artifacts/checkpoint.json` and exit
 
+## Failure Escalation Protocol
+
+When a specialist returns a failure artifact (e.g. `artifacts/impact_analyst_failure.json`):
+
+1. Read the failure report — check `failure_type`, `retryable`, `advice`
+2. Check `checkpoint.json.failures.<role>.count` for retry history
+
+| Condition | Action |
+|-----------|--------|
+| `retryable=true` AND count < 3 | Increment count in checkpoint, re-spawn the specialist |
+| `retryable=false` | Escalate to human immediately — don't retry |
+| count >= 3 | Escalate to human — "retried 3 times, still failing" |
+
+3. Update `checkpoint.json.failures` with the new count and last error
+4. Do NOT loop indefinitely — 3 retries max per phase, then human decision
+
 ### Checkpoint Format
 
 ```json

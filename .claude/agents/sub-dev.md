@@ -24,3 +24,9 @@ Quick-check: does changing this method affect anything unexpected?
 ## Output
 Write `artifacts/subdev_{task_id}_plan.json` declaring expected_touched_files.
 Create `artifacts/subdev_{task_id}_patch.diff` with the implementation diff.
+
+## Failure Protocol
+If you cannot complete the task:
+1. Write `artifacts/subdev_failure.json` with `status: "failed"`, `failure_type`, `retryable`, `advice`
+2. Do NOT write broken artifact files
+3. Exit — Tech Lead decides next step
